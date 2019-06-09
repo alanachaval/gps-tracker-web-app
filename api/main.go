@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gps-tracker-web-app/src"
+	"github.com/alanachaval/gps-tracker-web-app/src"
 	"github.com/pkg/errors"
 
 	"github.com/gin-gonic/gin"
