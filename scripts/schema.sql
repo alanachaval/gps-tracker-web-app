@@ -1,4 +1,4 @@
-CREATE TABLE `gpsTrack` (
+CREATE TABLE gpsframes.`gpsTrack` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `time` varchar(50) NOT NULL,
   `longitude` float(10) NOT NULL,
