@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"net/http"
@@ -43,7 +43,7 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
-func main() {
+func Start() {
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
@@ -53,7 +53,7 @@ func (a *Api) getFrames(c *gin.Context) {
 	response, err := a.database.GetFrames(0)
 
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Could not get projects.")
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
