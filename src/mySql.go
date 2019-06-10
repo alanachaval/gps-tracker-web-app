@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 )
 
@@ -19,11 +20,16 @@ func NewMySQL(dbUser, dbPassword, dbHost, dbName string) (*MySQL, error) {
 	db, err := sql.Open("mysql", connectionString)
 
 	if err != nil {
-		return &MySQL{}, err
+		panic(err.Error())
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, errors.Wrap(err, "Could not establish connection with the database")
+	err = db.Ping()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if err != nil {
+		return &MySQL{}, err
 	}
 
 	return &MySQL{DB: db}, nil
