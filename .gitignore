@@ -1,3 +1,4 @@
 vendor/
 gps-tracker-web-app
 gps-tracker-web-app.exe
+*.DS_Store
