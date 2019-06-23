@@ -5,16 +5,21 @@ type Frame struct {
 	UserID              int64
 	TrackNumber         int64
 	Time                string
-	Longitude           float64
-	Latitude            float64
+	Longitude           string
+	Latitude            string
 	Status              string
 	LatitudeHemisphere  string
 	LongitudeHemisphere string
-	EarthVelocity       float64
-	Track               float64
+	EarthVelocity       string
+	Track               string
 	Date                string
-	MagneticVariation   float64
+	MagneticVariation   string
 	DirectionVariation  string
 	SystemPosition      string
 	Checksum            string
+}
+
+type FramesDTO struct {
+	user   string
+	frames []Frame
 }

@@ -80,9 +80,10 @@ func (a *Api) getFrames(c *gin.Context) {
 }
 
 func (a *Api) postFrames(c *gin.Context) {
-	frames := []src.Frame{}
-	err := c.Bind(&frames)
-	err = a.AddFramesToDB("GPSTrackerUser", frames)
+	bodyRequest := src.FramesDTO{}
+
+	err := c.Bind(&bodyRequest)
+	err = a.AddFramesToDB(bodyRequest.user, bodyRequest.frames)
 	if err == nil {
 		c.JSON(200, gin.H{"msg": "Ok"})
 	} else {
