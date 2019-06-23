@@ -54,7 +54,22 @@ func Start() {
 }
 
 func (a *Api) getFrames(c *gin.Context) {
-	response, err := a.database.GetFrames(1, 0)
+
+	lastFrame := c.Query("lastTrack")
+	user := c.Query("user")
+
+	var err error
+	var response []src.Frame
+
+	if user == "" {
+		c.String(http.StatusInternalServerError, err.Error())
+	} else {
+		if lastFrame == "" {
+			response, err := a.database.GetFrames(user, 0)
+		} else {
+			response, err := a.database.GetFrames(user, lastFrame)
+		}
+	}
 
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
