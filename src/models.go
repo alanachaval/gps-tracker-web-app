@@ -2,6 +2,8 @@ package src
 
 type Frame struct {
 	Id                  int64
+	UserID              int64
+	trackNumber         int64
 	Time                string
 	Longitude           float64
 	Latitude            float64

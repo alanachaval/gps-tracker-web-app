@@ -37,11 +37,12 @@ func NewMySQL(dbUser, dbPassword, dbHost, dbName string) (*MySQL, error) {
 	return &MySQL{DB: db}, nil
 }
 
-func (db *MySQL) GetFrames(id int) ([]Frame, error) {
+// GetFrames return way for user, starting in lastTrack
+func (db *MySQL) GetFrames(userID int64, lastTrack int64) ([]Frame, error) {
 
 	frames := []Frame{}
 
-	rows, err := db.DB.Query("SELECT * FROM gpsTrack WHERE id >= ?", id)
+	rows, err := db.DB.Query("SELECT * FROM gpsTrack WHERE userID = ? and trackNumber > ?", userID, lastTrack)
 
 	if err != nil {
 
@@ -50,7 +51,7 @@ func (db *MySQL) GetFrames(id int) ([]Frame, error) {
 	for rows.Next() {
 
 		f := Frame{}
-		err := rows.Scan(&f.Id, &f.Time, &f.Longitude, &f.Latitude, &f.Status, &f.LatitudeHemisphere, &f.LongitudeHemisphere,
+		err := rows.Scan(&f.Id, &f.UserID, &f.trackNumber, &f.Time, &f.Longitude, &f.Latitude, &f.Status, &f.LatitudeHemisphere, &f.LongitudeHemisphere,
 			&f.EarthVelocity, &f.Track, &f.Date, &f.MagneticVariation, &f.DirectionVariation, &f.SystemPosition, &f.Checksum)
 
 		if err != nil {
@@ -64,35 +65,13 @@ func (db *MySQL) GetFrames(id int) ([]Frame, error) {
 	return frames, nil
 }
 
-func (db *MySQL) GetAllWay() ([]Frame, error) {
-
-	frames := []Frame{}
-
-	rows, err := db.DB.Query("SELECT * FROM gpsTrack")
-
-	if err != nil {
-
-		return []Frame{}, errors.Wrap(err, "Got an error in SELECT query.")
-	}
-	for rows.Next() {
-
-		f := Frame{}
-		err := rows.Scan(&f.Id, &f.Time, &f.Longitude, &f.Latitude, &f.Status, &f.LatitudeHemisphere, &f.LongitudeHemisphere,
-			&f.EarthVelocity, &f.Track, &f.Date, &f.MagneticVariation, &f.DirectionVariation, &f.SystemPosition, &f.Checksum)
-
-		if err != nil {
-
-			return []Frame{}, errors.Wrap(err, "Got an error in SELECT query.")
-		}
-
-		frames = append(frames, f)
-	}
-
-	return frames, nil
+// GetAllWay return all way for user
+func (db *MySQL) GetAllWay(userID int64) ([]Frame, error) {
+	return db.GetFrames(userID, 0)
 }
 
-// Recieve frame in string format
-func (db *MySQL) AddFrame(frame string) (Frame, error) {
+// AddFrame Recieve frame in string format
+func (db *MySQL) AddFrame(frame string, userID int64) error {
 
 	s := strings.Split(frame, ",")
 
@@ -121,6 +100,7 @@ func (db *MySQL) AddFrame(frame string) (Frame, error) {
 	}
 
 	newFrame := Frame{
+		UserID:              userID,
 		Time:                s[1],
 		Longitude:           longitude,
 		Latitude:            latitude,
@@ -135,23 +115,31 @@ func (db *MySQL) AddFrame(frame string) (Frame, error) {
 		SystemPosition:      s[12],
 	}
 
-	result, err := db.DB.Exec(
-		"INSERT INTO frames (time, longitude, latitude, status, latitudeHemisphere, longitudeHemisphere, earthVelocity, track, date, magneticVariation, directionVariation, systemPosition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-		newFrame.Time, newFrame.Longitude, newFrame.Latitude, newFrame.Status, newFrame.LatitudeHemisphere, newFrame.LongitudeHemisphere, newFrame.EarthVelocity,
+	_, err = db.DB.Exec(
+		"INSERT INTO frames (userId, trackNumber, time, longitude, latitude, status, latitudeHemisphere, longitudeHemisphere, earthVelocity, track, date, magneticVariation, directionVariation, systemPosition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+		newFrame.UserID, newFrame.trackNumber, newFrame.Time, newFrame.Longitude, newFrame.Latitude, newFrame.Status, newFrame.LatitudeHemisphere, newFrame.LongitudeHemisphere, newFrame.EarthVelocity,
 		newFrame.Track, newFrame.Date, newFrame.MagneticVariation, newFrame.DirectionVariation, newFrame.SystemPosition)
 
 	if err != nil {
-		return Frame{}, errors.Wrap(err, "Could not insert frame into database")
+		return errors.Wrap(err, "Could not insert frame into database")
 	}
 
-	lastID, err := result.LastInsertId()
+	return nil
+}
 
+// GetUserID retrieves userID
+func (db *MySQL) GetUserID(user string) (int64, error) {
+	result, err := db.DB.Query("SELECT id from gpsframes.user WHERE user = ?", user)
 	if err != nil {
-		return Frame{}, errors.Wrap(err, "Could not get last inserted project ID")
+		return 0, errors.Wrap(err, "Got an error in SELECT query.")
 	}
-
-	newFrame.Id = lastID
-
-	return newFrame, nil
-
+	if result.Next() {
+		return 0, errors.Wrap(err, "User not exists.")
+	}
+	var userID int64
+	err = result.Scan(&userID)
+	if err != nil {
+		return 0, errors.Wrap(err, "Got an error in SELECT query.")
+	}
+	return userID, nil
 }

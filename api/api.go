@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/alanachaval/gps-tracker-web-app/src"
 	"github.com/pkg/errors"
@@ -54,7 +55,7 @@ func Start() {
 }
 
 func (a *Api) getFrames(c *gin.Context) {
-	response, err := a.database.GetFrames(0)
+	response, err := a.database.GetFrames(1, 0)
 
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
@@ -67,11 +68,11 @@ func (a *Api) getFrames(c *gin.Context) {
 func (a *Api) postFrames(c *gin.Context) {
 	var frame string
 	err := c.Bind(&frame)
+	// PENDIENTE LEER JSON
+	frames := strings.Split(frame, "\n")
+	err = a.AddFramesToDB("GPSTrackerUser", frames)
 	if err == nil {
-		c.JSON(200, gin.H{
-
-			//FALTA CODIGO QUE AGARRE EL BODY, LO PROCESE Y DEVUELVA LOS DATOS SIN ENCRIPTAR
-		})
+		c.JSON(200, gin.H{})
 	} else {
 		c.JSON(400, gin.H{
 			"msg": err.Error(),
@@ -79,40 +80,18 @@ func (a *Api) postFrames(c *gin.Context) {
 	}
 }
 
-func (a *Api) DecryptFrames(key string, encryptedFrames []string) ([]string, error) {
+// AddFramesToDB insert the frames for the user
+func (a *Api) AddFramesToDB(user string, frames []string) error {
 
-	cipherKey := []byte(a.key)
-
-	frames := []string{}
-	for _, f := range encryptedFrames {
-		decoded, err := src.Decrypt(cipherKey, f)
-		if err != nil {
-			return nil, errors.Wrap(err, "Could not decrypt the frames")
-		}
-		frames = append(frames, decoded)
-	}
-
-	return frames, nil
-}
-
-func (a *Api) AddDecryptFramesToDB(key string, encryptedFrames []string) ([]src.Frame, error) {
-
-	planeFrames, err := a.DecryptFrames(a.key, encryptedFrames)
-
+	userID, err := a.database.GetUserID("GPSTrackerUser")
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not decrypt the frames")
+		return errors.Wrap(err, "Cant retrieve user")
 	}
-
-	finalFrames := []src.Frame{}
-	var aFrame src.Frame
-	for _, f := range planeFrames {
-		aFrame, err = a.database.AddFrame(f)
+	for _, f := range frames {
+		err := a.database.AddFrame(f, userID)
 		if err != nil {
-			return nil, errors.Wrap(err, "Could not decrypt the frames")
+			return errors.Wrap(err, "Cant insert frames")
 		}
-
-		finalFrames = append(finalFrames, aFrame)
 	}
-
-	return finalFrames, nil
+	return nil
 }
