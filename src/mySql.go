@@ -3,8 +3,6 @@ package src
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
-	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
@@ -51,7 +49,7 @@ func (db *MySQL) GetFrames(userID int64, lastTrack int64) ([]Frame, error) {
 	for rows.Next() {
 
 		f := Frame{}
-		err := rows.Scan(&f.Id, &f.UserID, &f.trackNumber, &f.Time, &f.Longitude, &f.Latitude, &f.Status, &f.LatitudeHemisphere, &f.LongitudeHemisphere,
+		err := rows.Scan(&f.Id, &f.UserID, &f.TrackNumber, &f.Time, &f.Longitude, &f.Latitude, &f.Status, &f.LatitudeHemisphere, &f.LongitudeHemisphere,
 			&f.EarthVelocity, &f.Track, &f.Date, &f.MagneticVariation, &f.DirectionVariation, &f.SystemPosition, &f.Checksum)
 
 		if err != nil {
@@ -71,59 +69,11 @@ func (db *MySQL) GetAllWay(userID int64) ([]Frame, error) {
 }
 
 // AddFrame Recieve frame in string format
-func (db *MySQL) AddFrame(frame string, userID int64) error {
+func (db *MySQL) AddFrame(newFrame Frame, userID int64) error {
 
-	s := strings.Split(frame, ",")
-
-	trackNumber, err := strconv.ParseInt(s[0], 10, 64)
-	if err == nil {
-		fmt.Println("Wrong!!")
-	}
-
-	longitude, err := strconv.ParseFloat(s[2], 32)
-	if err == nil {
-		fmt.Println("Wrong!!")
-	}
-	latitude, err := strconv.ParseFloat(s[3], 32)
-	if err == nil {
-		fmt.Println("Wrong!!")
-	}
-
-	earthVelocity, err := strconv.ParseFloat(s[7], 32)
-	if err == nil {
-		fmt.Println("Wrong!!")
-	}
-
-	track, err := strconv.ParseFloat(s[8], 32)
-	if err == nil {
-		fmt.Println("Wrong!!")
-	}
-
-	magnetic, err := strconv.ParseFloat(s[10], 32)
-	if err == nil {
-		fmt.Println("Wrong!!")
-	}
-
-	newFrame := Frame{
-		UserID:              userID,
-		trackNumber:         trackNumber,
-		Time:                s[1],
-		Longitude:           longitude,
-		Latitude:            latitude,
-		Status:              s[4],
-		LatitudeHemisphere:  s[5],
-		LongitudeHemisphere: s[6],
-		EarthVelocity:       earthVelocity,
-		Track:               track,
-		Date:                s[9],
-		MagneticVariation:   magnetic,
-		DirectionVariation:  s[11],
-		SystemPosition:      s[12],
-	}
-
-	_, err = db.DB.Exec(
+	_, err := db.DB.Exec(
 		"INSERT INTO gpsTrack (userId, trackNumber, time, longitude, latitude, status, latitudeHemisphere, longitudeHemisphere, earthVelocity, track, date, magneticVariation, directionVariation, systemPosition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-		newFrame.UserID, newFrame.trackNumber, newFrame.Time, newFrame.Longitude, newFrame.Latitude, newFrame.Status, newFrame.LatitudeHemisphere, newFrame.LongitudeHemisphere, newFrame.EarthVelocity,
+		userID, newFrame.TrackNumber, newFrame.Time, newFrame.Longitude, newFrame.Latitude, newFrame.Status, newFrame.LatitudeHemisphere, newFrame.LongitudeHemisphere, newFrame.EarthVelocity,
 		newFrame.Track, newFrame.Date, newFrame.MagneticVariation, newFrame.DirectionVariation, newFrame.SystemPosition)
 
 	if err != nil {

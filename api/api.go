@@ -3,10 +3,9 @@ package api
 import (
 	"net/http"
 	"os"
-	"strings"
 
+	"github.com/alanachaval/gps-tracker-web-app/src"
 	"github.com/gin-gonic/gin"
-	"github.com/gps-tracker-web-app/src"
 	"github.com/pkg/errors"
 )
 
@@ -66,23 +65,20 @@ func (a *Api) getFrames(c *gin.Context) {
 }
 
 func (a *Api) postFrames(c *gin.Context) {
-	buf := make([]byte, 1024)
-	num, _ := c.Request.Body.Read(buf)
-	reqBody := string(buf[0:num])
-
-	frames := strings.Split(reqBody, "\n")
-	err := a.AddFramesToDB("GPSTrackerUser", frames)
+	frames := []src.Frame{}
+	err := c.Bind(&frames)
+	err = a.AddFramesToDB("GPSTrackerUser", frames)
 	if err == nil {
 		c.JSON(200, gin.H{"msg": "Ok"})
 	} else {
 		c.JSON(400, gin.H{
-			"msg": err.Error(),
+			"error_msg": err.Error(),
 		})
 	}
 }
 
 // AddFramesToDB insert the frames for the user
-func (a *Api) AddFramesToDB(user string, frames []string) error {
+func (a *Api) AddFramesToDB(user string, frames []src.Frame) error {
 
 	userID, err := a.database.GetUserID("GPSTrackerUser")
 	if err != nil {
