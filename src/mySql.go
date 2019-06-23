@@ -75,6 +75,11 @@ func (db *MySQL) AddFrame(frame string, userID int64) error {
 
 	s := strings.Split(frame, ",")
 
+	trackNumber, err := strconv.ParseInt(s[0], 10, 64)
+	if err == nil {
+		fmt.Println("Wrong!!")
+	}
+
 	longitude, err := strconv.ParseFloat(s[2], 32)
 	if err == nil {
 		fmt.Println("Wrong!!")
@@ -101,6 +106,7 @@ func (db *MySQL) AddFrame(frame string, userID int64) error {
 
 	newFrame := Frame{
 		UserID:              userID,
+		trackNumber:         trackNumber,
 		Time:                s[1],
 		Longitude:           longitude,
 		Latitude:            latitude,
@@ -116,7 +122,7 @@ func (db *MySQL) AddFrame(frame string, userID int64) error {
 	}
 
 	_, err = db.DB.Exec(
-		"INSERT INTO frames (userId, trackNumber, time, longitude, latitude, status, latitudeHemisphere, longitudeHemisphere, earthVelocity, track, date, magneticVariation, directionVariation, systemPosition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+		"INSERT INTO gpsTrack (userId, trackNumber, time, longitude, latitude, status, latitudeHemisphere, longitudeHemisphere, earthVelocity, track, date, magneticVariation, directionVariation, systemPosition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
 		newFrame.UserID, newFrame.trackNumber, newFrame.Time, newFrame.Longitude, newFrame.Latitude, newFrame.Status, newFrame.LatitudeHemisphere, newFrame.LongitudeHemisphere, newFrame.EarthVelocity,
 		newFrame.Track, newFrame.Date, newFrame.MagneticVariation, newFrame.DirectionVariation, newFrame.SystemPosition)
 
@@ -133,7 +139,7 @@ func (db *MySQL) GetUserID(user string) (int64, error) {
 	if err != nil {
 		return 0, errors.Wrap(err, "Got an error in SELECT query.")
 	}
-	if result.Next() {
+	if !result.Next() {
 		return 0, errors.Wrap(err, "User not exists.")
 	}
 	var userID int64

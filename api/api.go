@@ -66,11 +66,12 @@ func (a *Api) getFrames(c *gin.Context) {
 }
 
 func (a *Api) postFrames(c *gin.Context) {
-	var frame string
-	err := c.Bind(&frame)
+	buf := make([]byte, 1024)
+	num, _ := c.Request.Body.Read(buf)
+	reqBody := string(buf[0:num])
 	// PENDIENTE LEER JSON
-	frames := strings.Split(frame, "\n")
-	err = a.AddFramesToDB("GPSTrackerUser", frames)
+	frames := strings.Split(reqBody, "\n")
+	err := a.AddFramesToDB("GPSTrackerUser", frames)
 	if err == nil {
 		c.JSON(200, gin.H{})
 	} else {
