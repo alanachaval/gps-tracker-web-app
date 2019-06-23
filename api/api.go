@@ -5,22 +5,19 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alanachaval/gps-tracker-web-app/src"
-	"github.com/pkg/errors"
-
 	"github.com/gin-gonic/gin"
+	"github.com/gps-tracker-web-app/src"
+	"github.com/pkg/errors"
 )
 
 type Api struct {
 	database *src.MySQL
-	key      string
 }
 
-func newApi(db *src.MySQL, key string) *Api {
+func newApi(db *src.MySQL) *Api {
 
 	return &Api{
 		database: db,
-		key:      key,
 	}
 }
 
@@ -34,8 +31,7 @@ func setupRouter() *gin.Engine {
 		errors.Wrap(err, "Could not establish connection with the database")
 	}
 
-	key := os.Getenv("privKey")
-	api := newApi(storage, key)
+	api := newApi(storage)
 
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
@@ -51,7 +47,11 @@ func setupRouter() *gin.Engine {
 func Start() {
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
-	r.Run(":8080")
+
+	key := os.Getenv("privKey")
+	cert := os.Getenv("cert")
+
+	r.Run(":443", key, cert)
 }
 
 func (a *Api) getFrames(c *gin.Context) {
@@ -69,11 +69,11 @@ func (a *Api) postFrames(c *gin.Context) {
 	buf := make([]byte, 1024)
 	num, _ := c.Request.Body.Read(buf)
 	reqBody := string(buf[0:num])
-	// PENDIENTE LEER JSON
+
 	frames := strings.Split(reqBody, "\n")
 	err := a.AddFramesToDB("GPSTrackerUser", frames)
 	if err == nil {
-		c.JSON(200, gin.H{})
+		c.JSON(200, gin.H{"msg": "Ok"})
 	} else {
 		c.JSON(400, gin.H{
 			"msg": err.Error(),
