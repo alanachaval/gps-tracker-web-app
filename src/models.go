@@ -20,6 +20,6 @@ type Frame struct {
 }
 
 type FramesDTO struct {
-	user   string
-	frames []Frame
+	User   string
+	Frames []Frame
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/alanachaval/gps-tracker-web-app/src"
 	"github.com/gin-gonic/gin"
@@ -64,10 +65,16 @@ func (a *Api) getFrames(c *gin.Context) {
 	if user == "" {
 		c.String(http.StatusInternalServerError, err.Error())
 	} else {
-		if lastFrame == "" {
-			response, err := a.database.GetFrames(user, 0)
-		} else {
-			response, err := a.database.GetFrames(user, lastFrame)
+		userID, err := a.database.GetUserID(user)
+		if err != nil {
+			if lastFrame == "" {
+				response, err = a.database.GetFrames(userID, 0)
+			} else {
+				lastFrameInt, err := strconv.ParseInt(lastFrame, 10, 64)
+				if err != nil {
+					response, err = a.database.GetFrames(userID, lastFrameInt)
+				}
+			}
 		}
 	}
 
@@ -83,7 +90,7 @@ func (a *Api) postFrames(c *gin.Context) {
 	bodyRequest := src.FramesDTO{}
 
 	err := c.Bind(&bodyRequest)
-	err = a.AddFramesToDB(bodyRequest.user, bodyRequest.frames)
+	err = a.AddFramesToDB(bodyRequest.User, bodyRequest.Frames)
 	if err == nil {
 		c.JSON(200, gin.H{"msg": "Ok"})
 	} else {
