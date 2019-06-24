@@ -40,7 +40,7 @@ func setupRouter() *gin.Engine {
 	})
 
 	r.GET("/frames", api.getFrames)
-	r.POST("/frame", api.postFrames)
+	r.POST("/frames", api.postFrames)
 
 	return r
 }
