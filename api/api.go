@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -50,8 +51,12 @@ func Start() {
 
 	key := os.Getenv("privKey")
 	cert := os.Getenv("cert")
+	r.Run(":443")
 
-	r.Run(":443", key, cert)
+	err := http.ListenAndServeTLS(":443", cert, key, r)
+	if err != nil {
+		fmt.Println("Could not start WebServer")
+	}
 }
 
 func (a *Api) getFrames(c *gin.Context) {
