@@ -51,9 +51,9 @@ func Start() {
 
 	key := os.Getenv("privKey")
 	cert := os.Getenv("cert")
-	r.Run(":443")
+	//r.Run(":443")
 
-	err := http.ListenAndServeTLS(":443", cert, key, r)
+	err := r.RunTLS(":443", cert, key)
 	if err != nil {
 		fmt.Println("Could not start WebServer")
 	}
