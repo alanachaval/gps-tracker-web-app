@@ -40,7 +40,7 @@ func (db *MySQL) GetFrames(userID int64, lastTrack int64) ([]Frame, error) {
 
 	frames := []Frame{}
 
-	rows, err := db.DB.Query("SELECT * FROM gpsTrack WHERE userID = ? and trackNumber > ?", userID, lastTrack)
+	rows, err := db.DB.Query("SELECT * FROM gpsTrack WHERE userID = ? and trackNumber > ? ORDER BY trackNumber ASC", userID, lastTrack)
 
 	if err != nil {
 
@@ -72,9 +72,9 @@ func (db *MySQL) GetAllWay(userID int64) ([]Frame, error) {
 func (db *MySQL) AddFrame(newFrame Frame, userID int64) error {
 
 	_, err := db.DB.Exec(
-		"INSERT INTO gpsTrack (userId, trackNumber, time, longitude, latitude, status, latitudeHemisphere, longitudeHemisphere, earthVelocity, track, date, magneticVariation, directionVariation, systemPosition) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+		"INSERT INTO gpsTrack (userId, trackNumber, time, longitude, latitude, status, latitudeHemisphere, longitudeHemisphere, earthVelocity, track, date, magneticVariation, directionVariation, systemPosition) SELECT * FROM (SELECT ? as a,? as b,? as c,? as d,? as e,? as f,? as g,? as h,? as i,? as j,? as k,? as l,? as m,? as n) AS tmp WHERE NOT EXISTS (SELECT userId FROM gpsTrack WHERE userId = ? AND trackNumber = ?) LIMIT 1",
 		userID, newFrame.TrackNumber, newFrame.Time, newFrame.Longitude, newFrame.Latitude, newFrame.Status, newFrame.LatitudeHemisphere, newFrame.LongitudeHemisphere, newFrame.EarthVelocity,
-		newFrame.Track, newFrame.Date, newFrame.MagneticVariation, newFrame.DirectionVariation, newFrame.SystemPosition)
+		newFrame.Track, newFrame.Date, newFrame.MagneticVariation, newFrame.DirectionVariation, newFrame.SystemPosition, userID, newFrame.TrackNumber)
 
 	if err != nil {
 		return errors.Wrap(err, "Could not insert frame into database")

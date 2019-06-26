@@ -68,15 +68,18 @@ func (a *Api) getFrames(c *gin.Context) {
 	var response []src.Frame
 
 	if user == "" {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.String(http.StatusInternalServerError, "Empty User")
+		return
 	} else {
-		userID, err := a.database.GetUserID(user)
-		if err != nil {
+		var userID int64
+		userID, err = a.database.GetUserID(user)
+		if err == nil {
 			if lastFrame == "" {
 				response, err = a.database.GetFrames(userID, 0)
 			} else {
-				lastFrameInt, err := strconv.ParseInt(lastFrame, 10, 64)
-				if err != nil {
+				var lastFrameInt int64
+				lastFrameInt, err = strconv.ParseInt(lastFrame, 10, 64)
+				if err == nil {
 					response, err = a.database.GetFrames(userID, lastFrameInt)
 				}
 			}
