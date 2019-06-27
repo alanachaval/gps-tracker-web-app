@@ -103,6 +103,7 @@ func (a *Api) postFrames(c *gin.Context) {
 		c.JSON(400, gin.H{
 			"error_msg": err.Error(),
 		})
+		return
 	}
 
 	err = a.AddFramesToDB(bodyRequest.User, bodyRequest.Frames)
@@ -113,6 +114,8 @@ func (a *Api) postFrames(c *gin.Context) {
 			"error_msg": err.Error(),
 		})
 	}
+
+	return
 }
 
 // AddFramesToDB insert the frames for the user
