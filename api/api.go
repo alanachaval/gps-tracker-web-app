@@ -98,6 +98,13 @@ func (a *Api) postFrames(c *gin.Context) {
 	bodyRequest := src.FramesDTO{}
 
 	err := c.Bind(&bodyRequest)
+
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error_msg": err.Error(),
+		})
+	}
+
 	err = a.AddFramesToDB(bodyRequest.User, bodyRequest.Frames)
 	if err == nil {
 		c.JSON(200, gin.H{"msg": "Ok"})
