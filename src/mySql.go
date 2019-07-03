@@ -46,6 +46,9 @@ func (db *MySQL) GetFrames(userID int64, lastTrack int64) ([]Frame, error) {
 
 		return []Frame{}, errors.Wrap(err, "Got an error in SELECT query.")
 	}
+
+	defer rows.Close()
+
 	for rows.Next() {
 
 		f := Frame{}
